@@ -2167,7 +2167,7 @@ Transform:
   m_GameObject: {fileID: 760751933}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 11.7, y: 0, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3527,8 +3527,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9482e35e04b0ed7489ddf790b325f1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileMaterial_White: {fileID: 2100000, guid: fcaa151b5d172a24fad41ca4b5996bd7, type: 2}
-  tileMaterial_Black: {fileID: 2100000, guid: c27fa28ae54255a49b61504f22d38399, type: 2}
+  tileMaterial_White: {fileID: 2100000, guid: a584992947f9dde4c807c04c67e3e4ac, type: 2}
+  tileMaterial_Black: {fileID: 2100000, guid: 43c8be709811ed147af1f9fd8af9cc1b, type: 2}
+  hoverTile: {fileID: 2100000, guid: f7504850a165a8a45aeda3707e2fa8a5, type: 2}
 --- !u!4 &1038740233 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4123133865119594, guid: d61029d578cf577468a601468ec147af, type: 3}
@@ -6170,7 +6171,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   materialManager: {fileID: 1038132961}
   tilePref: {fileID: 1154557512925340, guid: 9fe95759fdb315f4990df9284b64d5a3, type: 3}
-  chessManPref: {fileID: 8535969448845091204, guid: 405657ab1f55ba94bb663287dc88a003, type: 3}
+  piecePref: {fileID: 8535969448845091204, guid: 405657ab1f55ba94bb663287dc88a003, type: 3}
 --- !u!1 &1842403138
 GameObject:
   m_ObjectHideFlags: 0
@@ -6210,7 +6211,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 99ed25e37154c9942aa0ca5fea6525f0, type: 2}
+  - {fileID: 2100000, guid: 65dfbc1a299995a47999f11a6af04305, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6271,7 +6272,7 @@ Transform:
   m_GameObject: {fileID: 1842403138}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 3.5, y: 0, z: 3.5}
   m_LocalScale: {x: 12, y: 1, z: 12}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7215,7 +7216,7 @@ MonoBehaviour:
   autoZoomSpeed: 0
   autoHorizontalPanSpeed: 0
   autoVerticalPanSpeed: 0
-  originDistance: 34.641018
+  originDistance: 36.817657
   originReference: {fileID: 1842403142}
 --- !u!20 &2113324860
 Camera:
@@ -7276,13 +7277,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2113324856}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.1159169, y: 0.8804763, z: -0.27984816, w: 0.3647052}
-  m_LocalPosition: {x: -20, y: 20, z: 20}
+  m_LocalRotation: {x: 0, y: 0.85728735, z: -0.5148383, w: 0}
+  m_LocalPosition: {x: 3.5, y: 32.5, z: 20.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 55, y: 135, z: 0}
+  m_LocalEulerAnglesHint: {x: 35.264, y: 0, z: 0}
 --- !u!1 &1433940563662782
 GameObject:
   m_ObjectHideFlags: 0
