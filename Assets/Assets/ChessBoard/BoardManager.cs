@@ -7,77 +7,46 @@ using UnityEngine.UIElements;
 
 public class BoardManager : CloneMonoBehaviour
 {
+    public static BoardManager instance;
     [SerializeField] protected MaterialManager materialManager;
     protected Material _material;
-    private const int TILE_COUNT_X = 8;
-    private const int TILE_COUNT_Y = 8;
+    public int TILE_COUNT_X = 8;
+    public int TILE_COUNT_Y = 8;
     [SerializeField] protected GameObject tilePref;
-    protected GameObject[,] tiles;
-    protected ChessPiece[,] pieces;
-    protected ChessPiece selectedPiece;
-    protected Vector3Int startDrag;
-    protected Vector3Int endDrag;
     [SerializeField] protected GameObject piecePref;
+    protected GameObject[,] tiles;
+    public GameObject[,] Tiles
+    {
+        get { return tiles; }
+    }
+    protected ChessPiece[,] pieces;
+    public ChessPiece[,] Pieces
+    {
+        get { return pieces; }
+        set { pieces = value; }
+    }
     private Camera currentCamera;
     private Vector3Int currentHover;
-    private Vector3Int mouseOver;
+    protected Vector3Int mouseOver;
+    public Vector3Int MouseOver
+    {
+        get { return mouseOver; }
+    }
     protected override void Awake()
     {
         base.Awake();
+        if (BoardManager.instance != null) Debug.LogError("Only 1 BoardManager allow to exist");
+        BoardManager.instance = this;
         this.GenerateAllBroad(TILE_COUNT_X,TILE_COUNT_Y);
     }
 
     protected override void Update()
     {
         base.Update();
-        this.Raycast();
+        this.RayCast();
         //this.HoverTranslateTile();
-        if(Input.GetMouseButtonDown(0)){
-            this.SelectPiece(mouseOver.x,mouseOver.z);
-            Debug.Log(selectedPiece.name + selectedPiece.transform.position);
-            Debug.Log(pieces);
-        }
-        if(Input.GetMouseButtonUp(0)){
-            this.MovePiece(startDrag.x, startDrag.z, mouseOver.x, mouseOver.z);
-        }
     }
-    protected virtual void SelectPiece(int x , int y)
-    {
-        if(x < 0 || x >= pieces.Length || y < 0 || y >= pieces.Length) return;
-
-        ChessPiece p = pieces[x,y];
-        if( p !=null){
-            selectedPiece = p;
-            startDrag = mouseOver;
-        }
-    }
-    protected virtual void MovePiece(int x1, int z1, int x2, int z2)
-    {
-        if(x2 < 0 || z2 < 0) return;
-        startDrag = new Vector3Int(x1,1,z1);
-        endDrag = new Vector3Int(x2,1,z2);
-        selectedPiece = pieces[x1,z1];
-        selectedPiece.transform.position = endDrag;      
-    }
-    protected virtual void HoverTranslateTile()
-    {
-        foreach(GameObject tile in tiles){
-            if(tile.layer == LayerMask.NameToLayer("Hover")){
-                MeshRenderer renderer = tile.GetComponent<MeshRenderer>();
-                Material defaultMaterial = renderer.material;
-                if(defaultMaterial == null)
-                    continue;
-        
-            renderer.material = materialManager.HoverTile;
-
-            if(tile.layer != LayerMask.NameToLayer("Hover")){
-                renderer.material = defaultMaterial;
-            }
-        }           
-    }
-
-    }
-    protected virtual void Raycast()
+    protected virtual void RayCast()
     {
         if(!currentCamera){
             currentCamera = Camera.main;
@@ -95,7 +64,6 @@ public class BoardManager : CloneMonoBehaviour
                 tiles[currentHover.x, currentHover.z].layer = LayerMask.NameToLayer("Tile");
                 currentHover = hitPos;
                 tiles[hitPos.x, hitPos.z].layer = LayerMask.NameToLayer("Hover");
-                
             }
             this.MouseOverPos(hitPos);
         } else {
@@ -135,7 +103,6 @@ public class BoardManager : CloneMonoBehaviour
                 tiles[i,j] = this.GenerateTile(i,j);
             }
         }
-
         // Generate black pieace
         for(int j = 0; j < 3; j++){
             bool oldRow = (j % 2 == 0);
@@ -161,14 +128,13 @@ public class BoardManager : CloneMonoBehaviour
         _tile.layer = LayerMask.NameToLayer("Tile");
         return _tile;
     }
+    
     protected virtual ChessPiece GeneratePiece(Material _material, int xPos, int yPos, TeamType _team, ChessPieceType chessPieceType)
     {
         Vector3Int spawnPos = new Vector3Int(xPos, 1, yPos);
         ChessPiece _piece = Instantiate(piecePref.transform).GetComponent<ChessPiece>();
         _piece.team = _team;
         _piece.chessPieceType = chessPieceType;
-        _piece.xPos = spawnPos.x;
-        _piece.yPos = spawnPos.z;
         _piece.transform.position = spawnPos;
         MeshRenderer renderer = _piece.GetComponent<MeshRenderer>();
         renderer.material = _material;

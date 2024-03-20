@@ -1879,7 +1879,7 @@ Transform:
   m_GameObject: {fileID: 626710896}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 11.42, y: 0, z: -5.21}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6134,6 +6134,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1841685378}
   - component: {fileID: 1841685379}
+  - component: {fileID: 1841685380}
   m_Layer: 0
   m_Name: BoardManager
   m_TagString: Untagged
@@ -6170,8 +6171,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   materialManager: {fileID: 1038132961}
+  TILE_COUNT_X: 8
+  TILE_COUNT_Y: 8
   tilePref: {fileID: 1154557512925340, guid: 9fe95759fdb315f4990df9284b64d5a3, type: 3}
   piecePref: {fileID: 8535969448845091204, guid: 405657ab1f55ba94bb663287dc88a003, type: 3}
+--- !u!114 &1841685380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1841685377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7c229a11238bc54b9d1ae2cc16adfdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1842403138
 GameObject:
   m_ObjectHideFlags: 0

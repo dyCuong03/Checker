@@ -13,8 +13,5 @@ public enum TeamType{
 public class ChessPiece : CloneMonoBehaviour
 {
     public TeamType team;
-    public int xPos;
-    public int yPos;
     public ChessPieceType chessPieceType;
-
 }
