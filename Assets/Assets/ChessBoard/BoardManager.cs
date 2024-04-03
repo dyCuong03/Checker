@@ -9,6 +9,7 @@ public class BoardManager : CloneMonoBehaviour
 {
     public static BoardManager instance;
     [SerializeField] protected MaterialManager materialManager;
+    [SerializeField] protected GameObject boardBoder;
     protected Material _material;
     public int TILE_COUNT_X = 8;
     public int TILE_COUNT_Y = 8;
@@ -38,6 +39,11 @@ public class BoardManager : CloneMonoBehaviour
         if (BoardManager.instance != null) Debug.LogError("Only 1 BoardManager allow to exist");
         BoardManager.instance = this;
         this.GenerateAllBroad(TILE_COUNT_X,TILE_COUNT_Y);
+    }
+    protected override void Start()
+    {
+        base.Start();
+        boardBoder.SetActive(true);
     }
 
     protected override void Update()
