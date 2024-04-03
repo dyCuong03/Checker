@@ -106,7 +106,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300030, guid: 7b1ebbee2001ef74887110b41491763f, type: 3}
+  m_Mesh: {fileID: 4300000, guid: d5ad7b068f4b31a4cb137ab4991e1d72, type: 2}
 --- !u!114 &3366939821394522537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -119,3 +119,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33422ec1389b52348b7921f628d789ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  team: 0
+  chessPieceType: 0

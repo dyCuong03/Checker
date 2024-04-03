@@ -1869,7 +1869,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &626710897
 Transform:
   m_ObjectHideFlags: 0
@@ -1878,8 +1878,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 626710896}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 20.74, y: 0, z: 5.94}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 20.739943, y: 0, z: 5.9398665}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1887,7 +1887,7 @@ Transform:
   - {fileID: 259441818}
   - {fileID: 974817631}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1001 &632165792
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5848,6 +5848,18 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e181ad0b6f6c64a459c1a26119b14c2c, type: 2}
+    - target: {fileID: 64985606641792958, guid: 40a834f4e1bcfa24abc7fafbc273f058, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300030, guid: 7b1ebbee2001ef74887110b41491763f, type: 3}
+    - target: {fileID: 64985606641792958, guid: 40a834f4e1bcfa24abc7fafbc273f058, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 64985606641792958, guid: 40a834f4e1bcfa24abc7fafbc273f058, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6253,6 +6265,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   materialManager: {fileID: 1038132961}
+  mesh_King: {fileID: 4300000, guid: 1a0cfcdbdeb49cb41a30ac2d1df8c7da, type: 2}
   black_SpawnPos: {fileID: 1600416055}
   white_SpawnPos: {fileID: 888443099}
 --- !u!1 &1842403138

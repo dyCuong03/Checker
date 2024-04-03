@@ -9,6 +9,7 @@ using UnityEngine.UIElements;
 public class ChessPieceMoving : CloneMonoBehaviour
 {
     [SerializeField] protected MaterialManager materialManager;
+    [SerializeField] protected Mesh mesh_King;
     protected ChessPiece selectedPiece;
     protected Vector3Int startDrag;
     protected Vector3Int endDrag;
@@ -51,7 +52,6 @@ public class ChessPieceMoving : CloneMonoBehaviour
         this.ClearMovableTiles();
     }
 
-
     protected virtual void GetPiece(Vector3Int _startPos)
     {
         p = BoardManager.instance.Pieces[_startPos.x, _startPos.z];
@@ -65,6 +65,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
                 Renderer renderer = tile.GetComponent<MeshRenderer>();
                 renderer.material = materialManager.HoverTile;
                 tile.layer = LayerMask.NameToLayer("Hover");
+                this.ClearMovableTiles();
                 this.GetMovableTilesForPiece(p, _startPos);
             }
             else
@@ -80,27 +81,40 @@ public class ChessPieceMoving : CloneMonoBehaviour
         }
     }
     protected virtual void GetMovableTilesForPiece(ChessPiece chessPiece, Vector3Int startPos) {
-        this.ClearMovableTiles();
             int xRight = (int)startPos.x + 1;
             int xLeft = (int)startPos.x - 1;
             int y = 0;
-        switch (chessPiece.team){
-            case TeamType.Black:
-                y = (int)startPos.z + 1;
-                break;
-            case TeamType.White:
+        if(chessPiece.chessPieceType == ChessPieceType.Men){
+            switch (chessPiece.team){
+                case TeamType.Black:
+                    y = (int)startPos.z + 1;
+                    break;
+                case TeamType.White:
+                    y = (int)startPos.z - 1;
+                    break;
+            }
+                this.CheckMovableTile(xRight, xLeft,y);
+
+        } else if(chessPiece.chessPieceType == ChessPieceType.King){
                 y = (int)startPos.z - 1;
-                break;
+                this.CheckMovableTile(xRight, xLeft,y);
+
+                y = (int)startPos.z + 1;
+                this.CheckMovableTile(xRight, xLeft,y);
         }
+    }
+
+    protected virtual void CheckMovableTile(int xRight, int xLeft, int y){
         if(this.CanCapturePiece(xRight,y) || this.CanCapturePiece(xLeft,y)){
             this.canCapture = true;
         }
-        this.CheckAndAddMovableTile(xRight, y);
-        this.CheckAndAddMovableTile(xLeft, y);
+        this.AddMovableTile(xRight, y);
+        this.AddMovableTile(xLeft, y);
     }
 
-    protected virtual void CheckAndAddMovableTile(int x, int y) {
+    protected virtual void AddMovableTile(int x, int y) {
         if(this.CanCapturePiece(x,y)){
+            this.canCapture = true;
             int nextX = x + (x - Mathf.RoundToInt(selectedPiece.transform.position.x));
             int nextY = y + (y - Mathf.RoundToInt(selectedPiece.transform.position.z));
             this.ChangeMovableTile(nextX, nextY);
@@ -110,6 +124,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
             this.ChangeMovableTile(x, y);
         }
     }
+    
     protected virtual void ChangeMovableTile(int x, int y){
         GameObject tile = BoardManager.instance.Tiles[x, y];
         movableTiles.Add(tile);
@@ -160,14 +175,29 @@ public class ChessPieceMoving : CloneMonoBehaviour
             currentCamera = Camera.main;
             return;
         }
-
         RaycastHit info;
         Ray ray = currentCamera.ScreenPointToRay(Input.mousePosition);
         if(Physics.Raycast(ray, out info, 100, LayerMask.GetMask("Movable"))){
             Vector3Int hitPos = BoardManager.instance.LookupTileIndex(info.transform.gameObject);
             hitPos.y = 1;
             this.MovePiece(startDrag, hitPos);
+            this.BecomeAKingType(hitPos);
         }
+    }
+
+    protected virtual void BecomeAKingType(Vector3Int _endPos){
+        if(this.selectedPiece.team == TeamType.Black && _endPos.z == BoardManager.instance.TILE_COUNT_Y - 1){
+            this.BecomeAKingType(this.selectedPiece);
+        } else if(this.selectedPiece.team == TeamType.White && _endPos.z == 0){
+            this.BecomeAKingType(this.selectedPiece);
+        }
+    }
+    protected virtual void BecomeAKingType(ChessPiece chessPiece){
+        MeshCollider meshCollider = chessPiece.GetComponent<MeshCollider>();
+        MeshFilter mesh = chessPiece.GetComponent<MeshFilter>();
+        meshCollider.sharedMesh = mesh_King;
+        mesh.mesh = mesh_King;
+        chessPiece.chessPieceType = ChessPieceType.King;
     }
     protected virtual void MovePiece(Vector3Int _start, Vector3Int _end)
     {
@@ -180,20 +210,59 @@ public class ChessPieceMoving : CloneMonoBehaviour
         endDrag = _end;
         BoardManager.instance.Pieces[x1,y1] = null;
         BoardManager.instance.Pieces[x2,y2] = this.selectedPiece;
-        this.DespawnChessPiece();
         selectedPiece.transform.position = this.endDrag;
         isWhiteTurn = !isWhiteTurn;
+        this.DespawnChessPiece();
     }
     protected virtual void DespawnChessPiece(){
-        if(!canCapture) return;
-        Vector3 chessPieceCapture = chessPieceDespawn.gameObject.transform.position;
-        int x = (int)chessPieceCapture.x;
-        int y = (int)chessPieceCapture.z;
-        BoardManager.instance.Pieces[x,y] = null;
-        this.SpawnChessPieceCaptured(chessPieceDespawn);
-        this.canCapture = false;
-        
+        if(canCapture){
+            Vector3 chessPieceCapture = chessPieceDespawn.gameObject.transform.position;
+            int x = (int)chessPieceCapture.x;
+            int y = (int)chessPieceCapture.z;
+            BoardManager.instance.Pieces[x,y] = null;
+            this.SpawnChessPieceCaptured(chessPieceDespawn);
+            this.canCapture = false;
+            if(CanCapturePiece(this.selectedPiece)) {
+                isWhiteTurn = !isWhiteTurn;
+            }
+        }
     }
+    protected virtual bool CheckMovableTileBool(int xRight, int xLeft, int y){
+        if(this.CanCapturePiece(xRight,y) || this.CanCapturePiece(xLeft,y)){
+            this.canCapture = true;
+            return true;
+        }
+        this.AddMovableTile(xRight, y);
+        this.AddMovableTile(xLeft, y);
+        return false;
+    }
+    protected virtual bool CanCapturePiece(ChessPiece currentPiece) {
+        Vector3 startPos = currentPiece.gameObject.transform.position;
+            int xRight = (int)startPos.x + 1;
+            int xLeft = (int)startPos.x - 1;
+            int y = 0;
+        if(currentPiece.chessPieceType == ChessPieceType.Men){
+            switch (currentPiece.team){
+                case TeamType.Black:
+                    y = (int)startPos.z + 1;
+                    break;
+                case TeamType.White:
+                    y = (int)startPos.z - 1;
+                    break;
+            }
+            if(this.CheckMovableTileBool(xRight, xLeft,y)) return true;
+
+        } else if(currentPiece.chessPieceType == ChessPieceType.King){
+                y = (int)startPos.z - 1;
+            if(this.CheckMovableTileBool(xRight, xLeft,y)) return true;
+            
+                y = (int)startPos.z + 1;
+            if(this.CheckMovableTileBool(xRight, xLeft,y)) return true;
+                
+        }
+        return false;
+    }
+
     protected Vector3 newPos = new Vector3();
     protected virtual void SpawnChessPieceCaptured(ChessPiece chessPiece){
         Vector3 spawnPosition = Vector3.zero;
