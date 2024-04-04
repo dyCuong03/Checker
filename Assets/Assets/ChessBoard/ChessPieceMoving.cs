@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO.Compression;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -21,6 +22,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
     protected ChessPiece chessPieceDespawn;
     [SerializeField] protected GameObject black_SpawnPos;
     [SerializeField] protected GameObject white_SpawnPos;
+    private bool turnLogDisplayed = false;
     protected override void Awake()
     {
         base.Awake();
@@ -32,6 +34,20 @@ public class ChessPieceMoving : CloneMonoBehaviour
             this.MovePiece(BoardManager.instance.MouseOver);
             this.SelectPiece(BoardManager.instance.MouseOver);
         }
+        if (!turnLogDisplayed)
+        {
+            if (isWhiteTurn)
+            {
+            Debug.Log("Lượt chơi của quân cờ Trắng.");
+            }
+            else
+            {
+            Debug.Log("Lượt chơi của quân cờ Đen.");
+            }
+
+            turnLogDisplayed = true;
+        }
+
     }
 
     protected virtual void SelectPiece(Vector3Int _mousePos)
@@ -54,7 +70,8 @@ public class ChessPieceMoving : CloneMonoBehaviour
 
     protected virtual void GetPiece(Vector3Int _startPos)
     {
-        p = BoardManager.instance.Pieces[_startPos.x, _startPos.z];
+        // p = BoardManager.instance.Pieces[_startPos.x, _startPos.z];
+        p = this.GetChessPiece(_startPos.x, _startPos.z);
         if (p != null)
         {
             if ((isWhiteTurn && p.team == TeamType.White) || (!isWhiteTurn && p.team == TeamType.Black))
@@ -135,14 +152,16 @@ public class ChessPieceMoving : CloneMonoBehaviour
 
     protected virtual bool IsEmptyTile(int x, int y) {
         if (this.CheckOutBoard(x,y)) {
-            return BoardManager.instance.Pieces[x, y] == null;
+            //return BoardManager.instance.Pieces[x,y] = null;
+            return this.GetChessPiece(x,y) == null;
         }
         return false;
     }
 
     protected virtual bool CanCapturePiece(int x, int y) {
         if (this.CheckOutBoard(x,y)) {
-            ChessPiece piece = BoardManager.instance.Pieces[x, y];
+            // ChessPiece piece = BoardManager.instance.Pieces[x, y];
+            ChessPiece piece = this.GetChessPiece(x,y);
             if (piece != null && piece.team != selectedPiece.team) {
                 // Kiểm tra ô chéo tiếp theo của quân cờ
                 int nextX = x + (x - Mathf.RoundToInt(selectedPiece.transform.position.x));
@@ -208,18 +227,59 @@ public class ChessPieceMoving : CloneMonoBehaviour
         int y2 = _end.z;
         startDrag = _start;
         endDrag = _end;
-        BoardManager.instance.Pieces[x1,y1] = null;
-        BoardManager.instance.Pieces[x2,y2] = this.selectedPiece;
+        // BoardManager.instance.Pieces[x1,y1] = null;
+        // BoardManager.instance.Pieces[x2,y2] = this.selectedPiece;
+        this.SetChessPiece(null,x1,y1);
+        this.SetChessPiece(this.selectedPiece,x2,y2);
         selectedPiece.transform.position = this.endDrag;
         isWhiteTurn = !isWhiteTurn;
         this.DespawnChessPiece();
+        this.CheckCanPieceCapture();
+        turnLogDisplayed = false;
+    }
+    protected virtual void CheckCanPieceCapture()
+    {
+        if (selectedPiece == null || this.startDrag == null) return;
+    
+        Vector3Int piecePosition = Vector3Int.RoundToInt(selectedPiece.transform.position);
+        
+        Vector3Int topLeftPosition = piecePosition + new Vector3Int(-1, 0, 1);
+        Vector3Int topRightPosition = piecePosition + new Vector3Int(1, 0, 1);
+
+        Vector3Int bottomLeftPosition = piecePosition + new Vector3Int(-1, 0, -1);
+        Vector3Int bottomRightPosition = piecePosition + new Vector3Int(1, 0, -1);
+        
+        if(!CheckOutBoard(topLeftPosition) || !CheckOutBoard(topRightPosition) 
+        || !CheckOutBoard(bottomLeftPosition) || !CheckOutBoard(bottomRightPosition)) return;
+        switch (selectedPiece.team){
+            case TeamType.Black:
+                this.CheckCanPieceCapture(topLeftPosition,bottomRightPosition);
+                this.CheckCanPieceCapture(topRightPosition,bottomLeftPosition);
+                break;
+            case TeamType.White:
+                this.CheckCanPieceCapture(bottomRightPosition,topLeftPosition);
+                this.CheckCanPieceCapture(bottomLeftPosition,topRightPosition);
+                break;
+            }
+    }
+    protected virtual void CheckCanPieceCapture(Vector3Int targetPos){
+        if(this.GetChessPiece(targetPos.x, targetPos.z).team != this.selectedPiece.team){
+            this.SelectPiece(targetPos);
+        }
+    }
+    protected virtual void CheckCanPieceCapture(Vector3Int targetPos, Vector3Int emptyPos){
+        if(!this.IsEmptyTile(targetPos.x, targetPos.z) 
+            && this.IsEmptyTile(emptyPos.x, emptyPos.z)){
+                this.CheckCanPieceCapture(targetPos);
+            }
     }
     protected virtual void DespawnChessPiece(){
         if(canCapture){
             Vector3 chessPieceCapture = chessPieceDespawn.gameObject.transform.position;
             int x = (int)chessPieceCapture.x;
             int y = (int)chessPieceCapture.z;
-            BoardManager.instance.Pieces[x,y] = null;
+            //BoardManager.instance.Pieces[x,y] = null;
+            this.SetChessPiece(null,x,y);
             this.SpawnChessPieceCaptured(chessPieceDespawn);
             this.canCapture = false;
             if(CanCapturePiece(this.selectedPiece)) {
@@ -296,5 +356,15 @@ public class ChessPieceMoving : CloneMonoBehaviour
     protected virtual bool CheckOutBoard(int x, int y){
         return x >= 0 && x < BoardManager.instance.TILE_COUNT_X 
         && y >= 0 && y < BoardManager.instance.TILE_COUNT_Y;
+    }
+    protected virtual bool CheckOutBoard(Vector3Int vector3Int){
+        return vector3Int.x >= 0 && vector3Int.x < BoardManager.instance.TILE_COUNT_X 
+        && vector3Int.z >= 0 && vector3Int.z < BoardManager.instance.TILE_COUNT_Y;
+    }
+    protected virtual ChessPiece GetChessPiece(int x, int y){
+        return BoardManager.instance.Pieces[x,y];
+    }
+    protected virtual void SetChessPiece(ChessPiece newChess,int x, int y){
+        BoardManager.instance.Pieces[x,y] = newChess;
     }
 }
