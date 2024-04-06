@@ -3,14 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO.Compression;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
 
 public class ChessPieceMoving : CloneMonoBehaviour
 {
     [SerializeField] protected MaterialManager materialManager;
     [SerializeField] protected Mesh mesh_King;
+    [SerializeField] protected UIManager uIManager;
     protected ChessPiece selectedPiece;
     protected Vector3Int startDrag;
     protected Vector3Int endDrag;
@@ -20,6 +23,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
     private List<GameObject> movableTiles = new List<GameObject>();
     protected bool isWhiteTurn = true;
     protected ChessPiece chessPieceDespawn;
+    private Camera currentCamera;
     [SerializeField] protected GameObject black_SpawnPos;
     [SerializeField] protected GameObject white_SpawnPos;
     private bool turnLogDisplayed = false;
@@ -36,20 +40,17 @@ public class ChessPieceMoving : CloneMonoBehaviour
         }
         if (!turnLogDisplayed)
         {
-            if (isWhiteTurn)
-            {
-            Debug.Log("Lượt chơi của quân cờ Trắng.");
+            if (isWhiteTurn){
+            uIManager.SetText("White Turn!");
             }
-            else
-            {
-            Debug.Log("Lượt chơi của quân cờ Đen.");
+            else{
+            uIManager.SetText("Black Turn!");
             }
-
+            this.CheckCapture();
             turnLogDisplayed = true;
         }
 
     }
-
     protected virtual void SelectPiece(Vector3Int _mousePos)
     {
         this.ResetTiles();
@@ -187,7 +188,6 @@ public class ChessPieceMoving : CloneMonoBehaviour
         movableTiles.Clear();
     }
     // Move Piece
-    private Camera currentCamera;
     protected virtual void MovePiece(Vector3Int start)
     {
         if(!currentCamera){
@@ -203,7 +203,63 @@ public class ChessPieceMoving : CloneMonoBehaviour
             this.BecomeAKingType(hitPos);
         }
     }
+    protected virtual void CheckCapture()
+    {
+        for (int x = 0; x < BoardManager.instance.TILE_COUNT_X; x++)
+        {
+            for (int y = 0; y < BoardManager.instance.TILE_COUNT_Y; y++)
+            {
+                ChessPiece currentPiece = GetChessPiece(x, y);
+                // Nếu quân cờ hiện tại thuộc đội của bên đang có lượt chơi
+                if (currentPiece != null && currentPiece.team == (isWhiteTurn ? TeamType.White : TeamType.Black))
+                {
+                    this.CheckPieceCapture(currentPiece);
+                }
 
+            }
+        }
+    }
+    protected virtual void CheckPieceCapture(ChessPiece currentPiece)
+    {
+        Vector3Int piecePosition = Vector3Int.RoundToInt(currentPiece.transform.position);
+
+        Vector3Int topLeftPosition = piecePosition + new Vector3Int(-1, 0, 1);
+        Vector3Int topRightPosition = piecePosition + new Vector3Int(1, 0, 1);
+        Vector3Int bottomLeftPosition = piecePosition + new Vector3Int(-1, 0, -1);
+        Vector3Int bottomRightPosition = piecePosition + new Vector3Int(1, 0, -1);
+        if(currentPiece.chessPieceType == ChessPieceType.King){
+            this.CheckCaptureFromPosition(currentPiece, topLeftPosition);
+            this.CheckCaptureFromPosition(currentPiece, topRightPosition);
+            this.CheckCaptureFromPosition(currentPiece, bottomLeftPosition);
+            this.CheckCaptureFromPosition(currentPiece, bottomRightPosition);
+            return;
+        }
+        switch (currentPiece.team){
+            case TeamType.Black:
+            this.CheckCaptureFromPosition(currentPiece, topLeftPosition);
+            this.CheckCaptureFromPosition(currentPiece, topRightPosition);
+                break;
+            case TeamType.White:
+            this.CheckCaptureFromPosition(currentPiece, bottomLeftPosition);
+            this.CheckCaptureFromPosition(currentPiece, bottomRightPosition);
+                break;
+        }
+    }
+    protected virtual void CheckCaptureFromPosition(ChessPiece currentPiece, Vector3Int targetPos)
+    {
+    if (this.CheckOutBoard(targetPos))
+    {
+        ChessPiece targetPiece = this.GetChessPiece(targetPos.x, targetPos.z);
+            if (targetPiece != null && targetPiece.team != currentPiece.team)
+            {
+                Vector3Int nextPos = targetPos + (targetPos - Vector3Int.RoundToInt(currentPiece.transform.position));
+                if (this.CheckOutBoard(nextPos) && this.IsEmptyTile(nextPos.x, nextPos.z))
+                {
+                    this.SelectPiece(Vector3Int.RoundToInt(currentPiece.gameObject.transform.position));
+                }
+            }
+        }
+    }
     protected virtual void BecomeAKingType(Vector3Int _endPos){
         if(this.selectedPiece.team == TeamType.Black && _endPos.z == BoardManager.instance.TILE_COUNT_Y - 1){
             this.BecomeAKingType(this.selectedPiece);
@@ -234,44 +290,8 @@ public class ChessPieceMoving : CloneMonoBehaviour
         selectedPiece.transform.position = this.endDrag;
         isWhiteTurn = !isWhiteTurn;
         this.DespawnChessPiece();
-        this.CheckCanPieceCapture();
+        uIManager.CheckWinCondition();
         turnLogDisplayed = false;
-    }
-    protected virtual void CheckCanPieceCapture()
-    {
-        if (selectedPiece == null || this.startDrag == null) return;
-    
-        Vector3Int piecePosition = Vector3Int.RoundToInt(selectedPiece.transform.position);
-        
-        Vector3Int topLeftPosition = piecePosition + new Vector3Int(-1, 0, 1);
-        Vector3Int topRightPosition = piecePosition + new Vector3Int(1, 0, 1);
-
-        Vector3Int bottomLeftPosition = piecePosition + new Vector3Int(-1, 0, -1);
-        Vector3Int bottomRightPosition = piecePosition + new Vector3Int(1, 0, -1);
-        
-        if(!CheckOutBoard(topLeftPosition) || !CheckOutBoard(topRightPosition) 
-        || !CheckOutBoard(bottomLeftPosition) || !CheckOutBoard(bottomRightPosition)) return;
-        switch (selectedPiece.team){
-            case TeamType.Black:
-                this.CheckCanPieceCapture(topLeftPosition,bottomRightPosition);
-                this.CheckCanPieceCapture(topRightPosition,bottomLeftPosition);
-                break;
-            case TeamType.White:
-                this.CheckCanPieceCapture(bottomRightPosition,topLeftPosition);
-                this.CheckCanPieceCapture(bottomLeftPosition,topRightPosition);
-                break;
-            }
-    }
-    protected virtual void CheckCanPieceCapture(Vector3Int targetPos){
-        if(this.GetChessPiece(targetPos.x, targetPos.z).team != this.selectedPiece.team){
-            this.SelectPiece(targetPos);
-        }
-    }
-    protected virtual void CheckCanPieceCapture(Vector3Int targetPos, Vector3Int emptyPos){
-        if(!this.IsEmptyTile(targetPos.x, targetPos.z) 
-            && this.IsEmptyTile(emptyPos.x, emptyPos.z)){
-                this.CheckCanPieceCapture(targetPos);
-            }
     }
     protected virtual void DespawnChessPiece(){
         if(canCapture){
