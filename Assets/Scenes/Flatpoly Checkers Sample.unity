@@ -7092,6 +7092,7 @@ GameObject:
   - component: {fileID: 1841685378}
   - component: {fileID: 1841685379}
   - component: {fileID: 1841685380}
+  - component: {fileID: 1841685381}
   m_Layer: 0
   m_Name: BoardManager
   m_TagString: Untagged
@@ -7152,6 +7153,19 @@ MonoBehaviour:
   uIManager: {fileID: 827311823}
   black_SpawnPos: {fileID: 1600416055}
   white_SpawnPos: {fileID: 888443099}
+--- !u!114 &1841685381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1841685377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fccad3f9ad57704fb874c6d6792591f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chessPieceMoving: {fileID: 1841685380}
 --- !u!1 &1842403138
 GameObject:
   m_ObjectHideFlags: 0
