@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 public class AIMoving : CloneMonoBehaviour
 {
     [SerializeField] protected ChessPieceMoving chessPieceMoving;
@@ -9,7 +10,7 @@ public class AIMoving : CloneMonoBehaviour
     {
         base.Update();
         if(!chessPieceMoving.IsWhiteTurn){
-            MakeAIMove();
+            this.MakeAIMove();
         }
     }
     protected virtual void MakeAIMove()
@@ -18,22 +19,23 @@ public class AIMoving : CloneMonoBehaviour
         ChessPiece[,] board = CopyBoard(BoardManager.instance.Pieces);
         int depth = 3;
         Tuple<int, ChessPiece[,]> eval = MiniMax(board, depth, int.MinValue, int.MaxValue, false);
-        Debug.Log(eval.Item1);
         PerformBestMove(eval.Item2);
-        //chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startX,startY);
-        //chessPieceMoving.MovePiece(new Vector3Int(startX, 1, startY), new Vector3Int(endX, 1, endY));
     }
 protected virtual void PerformBestMove(ChessPiece[,] bestMove)
 {
-    // Tìm vị trí bắt đầu và kết thúc dựa trên nước đi tốt nhất
+    if (chessPieceMoving.hasMovedPiece) return;
     Vector3Int startPos = -Vector3Int.one;
     Vector3Int endPos = -Vector3Int.one;
     
-    // So sánh bảng cờ hiện tại và bảng cờ tốt nhất để xác định nước đi đã thay đổi
     for (int x = 0; x < BoardManager.instance.TILE_COUNT_X; x++)
     {
         for (int y = 0; y < BoardManager.instance.TILE_COUNT_Y; y++)
         {
+            if(BoardManager.instance.Pieces[x, y] != null){
+                if(BoardManager.instance.Pieces[x, y].team == TeamType.Black){
+                    chessPieceMoving.GetMovableTilesForPiece(BoardManager.instance.Pieces[x, y], new Vector3Int(x,1,y));
+                }
+            }
             if (BoardManager.instance.Pieces[x, y] == null && bestMove[x, y] != null)
             {
                 endPos = new Vector3Int(x, 1, y);
@@ -47,14 +49,16 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
     // Thực hiện nước đi tốt nhất
     if (startPos != -Vector3Int.one && endPos != -Vector3Int.one)
     {
-        // Đặt quân cờ từ vị trí bắt đầu sang vị trí kết thúc
-        chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-        chessPieceMoving.MovePiece(startPos, endPos);
-        Debug.Log(startPos + " finish " + endPos);
+        if (chessPieceMoving.CanCapture) {
+            startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
+            endPos = chessPieceMoving.capturePos;
+            chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+        } else {
+            chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+            chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+        }
     }
 }
-
-
  // Hàm minimax để tìm nước đi tối ưu
 protected virtual Tuple<int, ChessPiece[,]> MiniMax(ChessPiece[,] board, int depth, int alpha, int beta, bool maximizingPlayer)
 {
@@ -117,7 +121,6 @@ protected virtual List<ChessPiece[,]> GetChildNodes(ChessPiece[,] board)
             if (piece != null && piece.team == TeamType.Black)
             {
                 // Tạo các nước đi có thể từ quân cờ hiện tại
-
                 List<ChessPiece[,]> possibleMoves = GeneratePossibleMoves(CopyBoard(board), piece, x, y);
                 // Thêm các nước đi có thể vào danh sách các trạng thái con
                 childNodes.AddRange(possibleMoves);
@@ -158,7 +161,6 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
         List<ChessPiece[,]> possibleMoves = new List<ChessPiece[,]>();
         foreach (Vector3Int direction in adjacentPositions){
             Vector3Int newPos = piecePosition + direction;
-        
             // Kiểm tra xem ô mới có trên bảng không
             if (chessPieceMoving.CheckOutBoard(newPos.x, newPos.z)){
             // Kiểm tra xem ô mới có trống không
@@ -169,20 +171,29 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
                 // Kiểm tra xem quân cờ trên ô mới có thuộc đối phương không
                     var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(piece, newPos);
                     if (newCapturePos != -Vector3Int.one){
-                        possibleMoves.Add(GetChessPiece(board, newCapturePos, piece, x, y));
+                        possibleMoves.Add(GetChessPiece(board, newPos, piece, x, y));
                     }
                 }
             }
         }
         return possibleMoves;
     }
-
     protected virtual ChessPiece[,] GetChessPiece(ChessPiece[,] copyBoard ,Vector3Int newPos, ChessPiece piece, int x , int y){
         if(newPos != -Vector3Int.one && copyBoard[newPos.x, newPos.z] == null){
+
+            if(chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item2 != -Vector3.one){
+                ChessPiece despawnPiece = chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item1;
+                Vector3Int despawnPiecePos = chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item2;
+                chessPieceMoving.DespawnChessPiece(copyBoard, despawnPiece, despawnPiecePos);
+                var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(piece, newPos);
+                copyBoard[newCapturePos.x, newCapturePos.z] = copyBoard[x,y];
+                copyBoard[x,y] = null;
+                return copyBoard;
+            }
             copyBoard[newPos.x, newPos.z] = copyBoard[x,y];
             copyBoard[x,y] = null;
-            Debug.Log(x+ " "  +y);
-            Debug.Log(newPos.x+ " "  +newPos.y + " d");
+            //Debug.Log(x+ " "  +y);
+            //Debug.Log(newPos.x+ " "  +newPos.y + " d");
             return copyBoard;
         }
         return copyBoard;
@@ -190,7 +201,7 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
 
 protected virtual bool IsTerminalNode(ChessPiece[,] board)
 {
-
+    // Finish Game
     return false;
 }
 

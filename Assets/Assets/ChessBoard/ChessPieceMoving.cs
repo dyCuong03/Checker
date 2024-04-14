@@ -24,6 +24,11 @@ public class ChessPieceMoving : CloneMonoBehaviour
     private ChessPiece p;
     private GameObject tile;
     protected bool canCapture = false;
+    public bool CanCapture
+    {
+        get { return canCapture; }
+        set { canCapture = value; }
+    }
     private List<GameObject> movableTiles = new List<GameObject>();
     protected bool isWhiteTurn = true;
     public bool IsWhiteTurn
@@ -31,7 +36,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
         get { return isWhiteTurn; }
         set { isWhiteTurn = value; }
     }
-    protected ChessPiece chessPieceDespawn;
+    protected ChessPiece chessPieceDespawn = null;
     private Camera currentCamera;
     [SerializeField] protected GameObject black_SpawnPos;
     [SerializeField] protected GameObject white_SpawnPos;
@@ -75,7 +80,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
         this.GetPiece(_mousePos);
     }
 
-    protected virtual void ResetTiles()
+    public virtual void ResetTiles()
     {
         foreach (GameObject tile in BoardManager.instance.Tiles)
         {
@@ -118,7 +123,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
             return;
         }
     }
-    protected virtual void GetMovableTilesForPiece(ChessPiece chessPiece, Vector3Int startPos)
+    public virtual void GetMovableTilesForPiece(ChessPiece chessPiece, Vector3Int startPos)
     {
         int xRight = (int)startPos.x + 1;
         int xLeft = (int)startPos.x - 1;
@@ -156,7 +161,8 @@ public class ChessPieceMoving : CloneMonoBehaviour
         this.AddMovableTile(xRight, y);
         this.AddMovableTile(xLeft, y);
     }
-
+    
+    public Vector3Int capturePos;
     protected virtual void AddMovableTile(int x, int y)
     {
         if (this.CanCapturePiece(x, y))
@@ -165,6 +171,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
             int nextX = x + (x - Mathf.RoundToInt(selectedPiece.transform.position.x));
             int nextY = y + (y - Mathf.RoundToInt(selectedPiece.transform.position.z));
             this.ChangeMovableTile(nextX, nextY);
+            capturePos = new Vector3Int(nextX, 1, nextY);
             return;
         }
         if (this.IsEmptyTile(x, y) && !canCapture)
@@ -205,7 +212,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
                 int nextY = y + (y - Mathf.RoundToInt(selectedPiece.transform.position.z));
                 if (this.CheckOutBoard(nextX, nextY))
                 {
-                    ChessPiece nextPiece = BoardManager.instance.Pieces[nextX, nextY];
+                    ChessPiece nextPiece = this.GetChessPiece(nextX, nextY);
                     if (nextPiece == null)
                     {
                         this.chessPieceDespawn = piece;
@@ -215,6 +222,29 @@ public class ChessPieceMoving : CloneMonoBehaviour
             }
         }
         return false;
+    }
+    public virtual Tuple<ChessPiece, Vector3Int> CanCapturePiece(ChessPiece[,] board, ChessPiece currentPiece, int x, int y, int currentX, int currentY)
+    {
+        ChessPiece chessPiece = null;
+        if (this.CheckOutBoard(x, y))
+        {
+            ChessPiece piece = board[x,y];
+            if (piece != null && piece.team != currentPiece.team)
+            {
+                // Kiểm tra ô chéo tiếp theo của quân cờ
+                int nextX = x + (x - Mathf.RoundToInt(currentX));
+                int nextY = y + (y - Mathf.RoundToInt(currentY));
+                if (this.CheckOutBoard(nextX, nextY))
+                {
+                    ChessPiece nextPiece = board[nextX, nextY];
+                    if (nextPiece == null)
+                    {
+                        return Tuple.Create(piece, new Vector3Int(x, 1, y));
+                    }
+                }
+            }
+        }
+        return Tuple.Create(chessPiece, -Vector3Int.one);
     }
 
     protected virtual void ClearMovableTiles()
@@ -241,7 +271,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
         {
             Vector3Int hitPos = BoardManager.instance.LookupTileIndex(info.transform.gameObject);
             hitPos.y = 1;
-            this.MovePiece(startDrag, hitPos);
+            this.MovePiece(this.selectedPiece, startDrag, hitPos);
         }
     }
     protected virtual void CheckCapture()
@@ -324,39 +354,65 @@ public class ChessPieceMoving : CloneMonoBehaviour
         mesh.mesh = mesh_King;
         chessPiece.chessPieceType = ChessPieceType.King;
     }
-    public virtual void MovePiece(Vector3Int _start, Vector3Int _end)
+    public bool hasMovedPiece = false;
+    public virtual void MovePiece(ChessPiece _selectedPiece,Vector3Int _start, Vector3Int _end)
     {
+        hasMovedPiece = true;
         this.BecomeAKingType(_end);
-        if (selectedPiece == null) return;
+        if (_selectedPiece == null) return;
         int x1 = _start.x;
         int y1 = _start.z;
         int x2 = _end.x;
         int y2 = _end.z;
         startDrag = _start;
         endDrag = _end;
-        // BoardManager.instance.Pieces[x1,y1] = null;
-        // BoardManager.instance.Pieces[x2,y2] = this.selectedPiece;
+        // this.SetChessPiece(null, x1, y1);
+        // this.SetChessPiece(_selectedPiece, x2, y2);
+        // _selectedPiece.transform.position = this.endDrag;
+        // isWhiteTurn = !isWhiteTurn;
+        // if(chessPieceDespawn != null){
+        //     this.DespawnChessPiece(BoardManager.instance.Pieces, chessPieceDespawn, chessPieceDespawn.gameObject.transform.position);
+        // }
+        // uIManager.CheckWinCondition();
+        // turnLogDisplayed = false;
+        // ResetTiles();
+        StartCoroutine(MoveToTargetThenDoSomething(_selectedPiece.transform,endDrag, _selectedPiece,x1,x2,y1,y2));
+    }
+    IEnumerator MoveToTargetThenDoSomething(Transform targetTransform, Vector3Int targetPosition,ChessPiece _selectedPiece, int x1 , int x2, int y1, int y2)
+    {
+        yield return StartCoroutine(MoveToTarget(targetTransform, targetPosition));
         this.SetChessPiece(null, x1, y1);
-        this.SetChessPiece(this.selectedPiece, x2, y2);
-        selectedPiece.transform.position = this.endDrag;
+        this.SetChessPiece(_selectedPiece, x2, y2);
+        if(chessPieceDespawn != null){
+            this.DespawnChessPiece(BoardManager.instance.Pieces, chessPieceDespawn, chessPieceDespawn.gameObject.transform.position);
+        }
         isWhiteTurn = !isWhiteTurn;
-        this.DespawnChessPiece();
         uIManager.CheckWinCondition();
         turnLogDisplayed = false;
+        ResetTiles();
+        hasMovedPiece = false;
     }
-    protected virtual void DespawnChessPiece()
+    IEnumerator MoveToTarget(Transform targetTransform, Vector3Int targetPosition)
     {
-        if (canCapture)
+        while (Vector3.Distance(targetTransform.position, targetPosition) > 0.01f)
         {
-            Vector3 chessPieceCapture = chessPieceDespawn.gameObject.transform.position;
+            targetTransform.position = Vector3.Lerp(targetTransform.position, targetPosition, 10f * Time.deltaTime);
+
+            yield return null;
+        }
+        targetTransform.position = targetPosition;
+    }
+    public virtual void DespawnChessPiece(ChessPiece[,] board, ChessPiece _chessPieceDespawn, Vector3 _chessPieceDespawnPos)
+    {
+        if (canCapture){
+            Vector3 chessPieceCapture = _chessPieceDespawnPos;
             int x = (int)chessPieceCapture.x;
             int y = (int)chessPieceCapture.z;
             //BoardManager.instance.Pieces[x,y] = null;
-            this.SetChessPiece(null, x, y);
-            this.SpawnChessPieceCaptured(chessPieceDespawn);
+            board[x,y] = null;
+            SpawnChessPieceCaptured(board,_chessPieceDespawn);
             this.canCapture = false;
-            if (CanCapturePiece(this.selectedPiece))
-            {
+            if (CanCapturePiece(this.selectedPiece)){
                 isWhiteTurn = !isWhiteTurn;
             }
         }
@@ -403,8 +459,8 @@ public class ChessPieceMoving : CloneMonoBehaviour
         return false;
     }
 
-    protected Vector3 newPos = new Vector3();
-    protected virtual void SpawnChessPieceCaptured(ChessPiece chessPiece)
+    public Vector3 newPos = new Vector3();
+    public virtual void SpawnChessPieceCaptured(ChessPiece[,] board , ChessPiece chessPiece)
     {
         Vector3 spawnPosition = Vector3.zero;
         if (chessPiece.team == TeamType.White)
@@ -434,7 +490,7 @@ public class ChessPieceMoving : CloneMonoBehaviour
 
         float x = chessPiece.gameObject.transform.position.x;
         float y = chessPiece.gameObject.transform.position.z;
-        this.SetChessPiece(null,(int)x, (int)y);
+        board[(int)x, (int)y] = null;
         chessPiece.gameObject.transform.position = spawnPosition;
     }
 
