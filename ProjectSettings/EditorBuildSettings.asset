@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Flatpoly Checkers Sample.unity
-    guid: 7df1b017ffef97648a3c093bf99f29df
+    path: Assets/Scenes/Menu.unity
+    guid: ce0b9808d7881e54e82122abb0a511fd
+  - enabled: 1
+    path: Assets/Scenes/HowToPlay.unity
+    guid: 5e668b0e2ef949e4a904125f143e9bf3
+  - enabled: 1
+    path: Assets/Scenes/EndGame.unity
+    guid: 0f54239aac2333e42a3df1aef34c3d18
   m_configObjects: {}
