@@ -10,10 +10,12 @@ public class UIManager : CloneMonoBehaviour
     [SerializeField] protected Text turn_Text;
     [SerializeField] protected UIWinGame ui_Win;
     [SerializeField] protected Button button_Restart;
+    [SerializeField] protected Button button_Menu;
     protected override void Start()
     {
         base.Start();
         button_Restart.onClick.AddListener(RestartGame);
+        button_Menu.onClick.AddListener(ui_Win.Menu);
         ui_Win.gameObject.SetActive(false);
     }
     public virtual void SetText(String text){

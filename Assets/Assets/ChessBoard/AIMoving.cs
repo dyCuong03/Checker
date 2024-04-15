@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 public class AIMoving : CloneMonoBehaviour
 {
     [SerializeField] protected ChessPieceMoving chessPieceMoving;
+    public int score;
 
     protected override void Update()
     {
@@ -22,64 +23,34 @@ public class AIMoving : CloneMonoBehaviour
         int depth = 3;
         Tuple<int, ChessPiece[,]> eval = MiniMax(board, depth, int.MinValue, int.MaxValue, false);
         PerformBestMove(eval.Item2);
+        score = eval.Item1;
     }
 protected virtual void PerformBestMove(ChessPiece[,] bestMove)
 {
     Vector3Int startPos = -Vector3Int.one;
     Vector3Int endPos = -Vector3Int.one;
     if (chessPieceMoving.hasMovedPiece) return;
-
-    // foreach(ChessPiece piece in BoardManager.instance.Pieces){
-    //         if(piece != null){
-    //             if(piece.team == TeamType.Black){
-    //                 chessPieceMoving.GetMovableTilesForPiece(piece, Vector3Int.RoundToInt(piece.transform.position));
-    //                     if (chessPieceMoving.CanCapture) {
-    //                         startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.transform.position);
-    //                         endPos = chessPieceMoving.capturePos;
-    //                         //chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-
-    //                         if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
-    //                             chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-                                
-    //                             // if(chessPieceMoving.CanCapturePiece(chessPieceMoving.GetChessPiece(endPos.x, endPos.z))){
-    //                             //     chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(endPos.x, endPos.z);
-    //                             //     startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
-    //                             //     endPos = chessPieceMoving.capturePos;
-    //                             //     chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-    //                             // } 
-    //                             return;
-    //                         }
-    //                     } 
-    //             }
-    //         }
-    // }
+    Debug.Log(score.ToString());
+    foreach(ChessPiece piece in BoardManager.instance.Pieces){
+            if(piece != null){
+                if(piece.team == TeamType.Black){
+                    chessPieceMoving.GetMovableTilesForPiece(piece, Vector3Int.RoundToInt(piece.transform.position));
+                        if (chessPieceMoving.CanCapture) {
+                            startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.transform.position);
+                            endPos = chessPieceMoving.capturePos;
+                            if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+                                chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+                                return;
+                            }
+                        } 
+                }
+            }
+    }
     
     for (int x = 0; x < BoardManager.instance.TILE_COUNT_X; x++)
     {
         for (int y = 0; y < BoardManager.instance.TILE_COUNT_Y; y++)
         {
-            if(BoardManager.instance.Pieces[x, y] != null){
-                if(BoardManager.instance.Pieces[x, y].team == TeamType.Black){
-                    chessPieceMoving.GetMovableTilesForPiece(BoardManager.instance.Pieces[x, y], new Vector3Int(x,1,y));
-                        if (chessPieceMoving.CanCapture) {
-                            startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.transform.position);
-                            endPos = chessPieceMoving.capturePos;
-                            chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-
-                            if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
-                                chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-                                
-                                // if(chessPieceMoving.CanCapturePiece(chessPieceMoving.GetChessPiece(endPos.x, endPos.z))){
-                                //     chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(endPos.x, endPos.z);
-                                //     startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
-                                //     endPos = chessPieceMoving.capturePos;
-                                //     chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-                                // } 
-                            }
-                            return;
-                        } 
-                }
-            }
             if (BoardManager.instance.Pieces[x, y] == null && bestMove[x, y] != null)
             {
                 endPos = new Vector3Int(x, 1, y);
@@ -92,25 +63,10 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
     }
 
     //Thực hiện nước đi tốt nhất
-    // if (startPos != -Vector3Int.one && endPos != -Vector3Int.one)
-    // {
-    //     if (chessPieceMoving.CanCapture) {
-    //         startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
-    //         endPos = chessPieceMoving.capturePos;
-    //         chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-    //     } else {
-    //         chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-    //         chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-    //     }
-    // }
-    if (startPos != -Vector3Int.one && endPos != -Vector3Int.one)
-    {
-        if (!chessPieceMoving.CanCapture){
-            chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-            if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
-                chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-            }
-        }
+    if (startPos == -Vector3Int.one && endPos == -Vector3Int.one) return;
+    chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+    if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+        chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
     }
 }
  // Hàm minimax để tìm nước đi tối ưu
@@ -184,7 +140,6 @@ protected virtual List<ChessPiece[,]> GetChildNodes(ChessPiece[,] board)
     return childNodes;
 }
 
-
 protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board, ChessPiece piece, int x, int y)
 {
     // Logic để tạo ra các nước đi có thể từ quân cờ hiện tại
@@ -254,7 +209,14 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
 protected virtual bool IsTerminalNode(ChessPiece[,] board)
 {
     // Finish Game
-    return false;
+    foreach (ChessPiece piece in board)
+    {
+        if (piece != null && piece.team == TeamType.White)
+        {
+            return false; 
+        }
+    }
+    return true;
 }
 
 protected virtual int Evaluate(ChessPiece[,] board)
@@ -329,48 +291,5 @@ int score = 0;
     }
     return copy;    
 }
-// protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board, ChessPiece piece, int x, int y)
-// {
-//     List<ChessPiece[,]> possibleMoves = new List<ChessPiece[,]>();
-
-//     // Logic để tạo ra các nước đi có thể từ quân cờ hiện tại
-//     Vector3Int piecePosition = new Vector3Int(x,1,y);
-    
-//         Vector3Int topLeftPosition = piecePosition + new Vector3Int(-1, 0, 1);
-//         Vector3Int topRightPosition = piecePosition + new Vector3Int(1, 0, 1);
-//         Vector3Int bottomLeftPosition = piecePosition + new Vector3Int(-1, 0, -1);
-//         Vector3Int bottomRightPosition = piecePosition + new Vector3Int(1, 0, -1);
-
-//         if(chessPieceMoving.IsEmptyTile(topLeftPosition.x, topLeftPosition.z)){
-//             if(chessPieceMoving.CheckOutBoard(topLeftPosition)){
-//                 possibleMoves.Add(this.GetChessPiece(board, topLeftPosition, piece, x, y));
-//             }
-//         }
-//         if(chessPieceMoving.IsEmptyTile(topRightPosition.x, topRightPosition.z)){
-//             if(chessPieceMoving.CheckOutBoard(topRightPosition)){
-//                 possibleMoves.Add(this.GetChessPiece(board, topRightPosition, piece, x, y));
-//             }
-//         }
-
-//         if (piece.chessPieceType == ChessPieceType.King)
-//         {
-//             var posTL = chessPieceMoving.CheckCaptureFromPosition(piece, topLeftPosition);
-//             var posTR = chessPieceMoving.CheckCaptureFromPosition(piece, topRightPosition);
-//             var posBL = chessPieceMoving.CheckCaptureFromPosition(piece, bottomLeftPosition);
-//             var posBR = chessPieceMoving.CheckCaptureFromPosition(piece, bottomRightPosition);
-//             if(posTL != -Vector3Int.one) possibleMoves.Add(this.GetChessPiece(board, posTL, piece, x, y));
-//             if(posTR != -Vector3Int.one) possibleMoves.Add(this.GetChessPiece(board, posTR, piece, x, y));
-//             if(posBL != -Vector3Int.one) possibleMoves.Add(this.GetChessPiece(board, posBL, piece, x, y));
-//             if(posBR != -Vector3Int.one) possibleMoves.Add(this.GetChessPiece(board, posBR, piece, x, y));
-//         }
-//         else {
-//             var posTL = chessPieceMoving.CheckCaptureFromPosition(piece, topLeftPosition);
-//             var posTR = chessPieceMoving.CheckCaptureFromPosition(piece, topRightPosition);
-//             if(posTL != -Vector3Int.one) possibleMoves.Add(this.GetChessPiece(board, posTL, piece, x, y));
-//             if(posTR != -Vector3Int.one) possibleMoves.Add(this.GetChessPiece(board, posTR, piece, x, y));
-//         }
-
-//     return possibleMoves;
-// }
 }
 

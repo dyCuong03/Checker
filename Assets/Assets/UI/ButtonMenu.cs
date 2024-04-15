@@ -6,7 +6,7 @@ public class ButtonMenu : MonoBehaviour
 	public GameObject Panel;
 	public void ChoiMoi()
 	{
-		SceneManager.LoadScene(2);
+		SceneManager.LoadScene(3);
 	}
 
 	public void Thoat()
