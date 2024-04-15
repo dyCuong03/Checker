@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 public class AIMoving : CloneMonoBehaviour
@@ -23,19 +25,90 @@ public class AIMoving : CloneMonoBehaviour
     }
 protected virtual void PerformBestMove(ChessPiece[,] bestMove)
 {
-    if (chessPieceMoving.hasMovedPiece) return;
     Vector3Int startPos = -Vector3Int.one;
     Vector3Int endPos = -Vector3Int.one;
+    if (chessPieceMoving.hasMovedPiece) return;
+
+    foreach(ChessPiece piece in BoardManager.instance.Pieces){
+            if(piece != null){
+                if(piece.team == TeamType.Black){
+                    chessPieceMoving.GetMovableTilesForPiece(piece, Vector3Int.RoundToInt(piece.transform.position));
+                        if (chessPieceMoving.CanCapture) {
+                            startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.transform.position);
+                            endPos = chessPieceMoving.capturePos;
+                            //chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+
+                            if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+                                chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+                                
+                                // if(chessPieceMoving.CanCapturePiece(chessPieceMoving.GetChessPiece(endPos.x, endPos.z))){
+                                //     chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(endPos.x, endPos.z);
+                                //     startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
+                                //     endPos = chessPieceMoving.capturePos;
+                                //     chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+                                // } 
+                                return;
+                            }
+                        } 
+                }
+            }
+    }
+    // for (int x = 0; x < BoardManager.instance.TILE_COUNT_X; x++)
+    // {
+    //     for (int y = 0; y < BoardManager.instance.TILE_COUNT_Y; y++)
+    //     {
+    //         if(BoardManager.instance.Pieces[x, y] != null){
+    //             if(BoardManager.instance.Pieces[x, y].team == TeamType.Black){
+    //                 chessPieceMoving.GetMovableTilesForPiece(BoardManager.instance.Pieces[x, y], new Vector3Int(x,1,y));
+    //                     if (chessPieceMoving.CanCapture) {
+    //                         startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.transform.position);
+    //                         endPos = chessPieceMoving.capturePos;
+    //                         chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+
+    //                         if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+    //                             chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+                                
+    //                             // if(chessPieceMoving.CanCapturePiece(chessPieceMoving.GetChessPiece(endPos.x, endPos.z))){
+    //                             //     chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(endPos.x, endPos.z);
+    //                             //     startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
+    //                             //     endPos = chessPieceMoving.capturePos;
+    //                             //     chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+    //                             // } 
+    //                             return;
+    //                         }
+    //                     } 
+    //             }
+    //         }
+    //     }
+    // }
+
     
     for (int x = 0; x < BoardManager.instance.TILE_COUNT_X; x++)
     {
         for (int y = 0; y < BoardManager.instance.TILE_COUNT_Y; y++)
         {
-            if(BoardManager.instance.Pieces[x, y] != null){
-                if(BoardManager.instance.Pieces[x, y].team == TeamType.Black){
-                    chessPieceMoving.GetMovableTilesForPiece(BoardManager.instance.Pieces[x, y], new Vector3Int(x,1,y));
-                }
-            }
+            // if(BoardManager.instance.Pieces[x, y] != null){
+            //     if(BoardManager.instance.Pieces[x, y].team == TeamType.Black){
+            //         chessPieceMoving.GetMovableTilesForPiece(BoardManager.instance.Pieces[x, y], new Vector3Int(x,1,y));
+            //             if (chessPieceMoving.CanCapture) {
+            //                 startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.transform.position);
+            //                 endPos = chessPieceMoving.capturePos;
+            //                 chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+
+            //                 if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+            //                     chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+                                
+            //                     // if(chessPieceMoving.CanCapturePiece(chessPieceMoving.GetChessPiece(endPos.x, endPos.z))){
+            //                     //     chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(endPos.x, endPos.z);
+            //                     //     startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
+            //                     //     endPos = chessPieceMoving.capturePos;
+            //                     //     chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+            //                     // } 
+            //                 }
+            //                 return;
+            //             } 
+            //     }
+            // }
             if (BoardManager.instance.Pieces[x, y] == null && bestMove[x, y] != null)
             {
                 endPos = new Vector3Int(x, 1, y);
@@ -46,16 +119,26 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
             }
         }
     }
-    // Thực hiện nước đi tốt nhất
+
+    //Thực hiện nước đi tốt nhất
+    // if (startPos != -Vector3Int.one && endPos != -Vector3Int.one)
+    // {
+    //     if (chessPieceMoving.CanCapture) {
+    //         startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
+    //         endPos = chessPieceMoving.capturePos;
+    //         chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+    //     } else {
+    //         chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+    //         chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+    //     }
+    // }
     if (startPos != -Vector3Int.one && endPos != -Vector3Int.one)
     {
-        if (chessPieceMoving.CanCapture) {
-            startPos = Vector3Int.RoundToInt(chessPieceMoving.SelectedPiece.gameObject.transform.position);
-            endPos = chessPieceMoving.capturePos;
-            chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
-        } else {
+        if (!chessPieceMoving.CanCapture){
             chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-            chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+            if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+                chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+            }
         }
     }
 }
@@ -164,12 +247,12 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
             // Kiểm tra xem ô mới có trên bảng không
             if (chessPieceMoving.CheckOutBoard(newPos.x, newPos.z)){
             // Kiểm tra xem ô mới có trống không
-                if (chessPieceMoving.IsEmptyTile(newPos.x, newPos.z)){
+                if (chessPieceMoving.IsEmptyTile(board,newPos.x, newPos.z)){
                     possibleMoves.Add(GetChessPiece(board, newPos, piece, x, y));
                 }   
                 else {
                 // Kiểm tra xem quân cờ trên ô mới có thuộc đối phương không
-                    var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(piece, newPos);
+                    var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(board,piece, newPos, true);
                     if (newCapturePos != -Vector3Int.one){
                         possibleMoves.Add(GetChessPiece(board, newPos, piece, x, y));
                     }
@@ -184,16 +267,14 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
             if(chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item2 != -Vector3.one){
                 ChessPiece despawnPiece = chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item1;
                 Vector3Int despawnPiecePos = chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item2;
-                chessPieceMoving.DespawnChessPiece(copyBoard, despawnPiece, despawnPiecePos);
-                var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(piece, newPos);
+                chessPieceMoving.DespawnChessPiece(copyBoard, despawnPiece, despawnPiecePos, true);
+                var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(copyBoard,piece, newPos, true);
                 copyBoard[newCapturePos.x, newCapturePos.z] = copyBoard[x,y];
                 copyBoard[x,y] = null;
                 return copyBoard;
             }
             copyBoard[newPos.x, newPos.z] = copyBoard[x,y];
             copyBoard[x,y] = null;
-            //Debug.Log(x+ " "  +y);
-            //Debug.Log(newPos.x+ " "  +newPos.y + " d");
             return copyBoard;
         }
         return copyBoard;
@@ -217,7 +298,7 @@ int score = 0;
     {
         for (int j = 0; j < BoardManager.instance.TILE_COUNT_Y; j++)
         {
-            ChessPiece currentPiece = chessPieceMoving.GetChessPiece(i, j);
+            ChessPiece currentPiece = board[i, j];
             if (currentPiece != null)
             {
                 if (currentPiece.team == TeamType.Black)
