@@ -31,6 +31,7 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
     Vector3Int endPos = -Vector3Int.one;
     if (chessPieceMoving.hasMovedPiece) return;
     Debug.Log(score.ToString());
+    Debug.Log(chessPieceMoving.CanCapture);
     foreach(ChessPiece piece in BoardManager.instance.Pieces){
             if(piece != null){
                 if(piece.team == TeamType.Black){
@@ -46,7 +47,6 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
                 }
             }
     }
-    
     for (int x = 0; x < BoardManager.instance.TILE_COUNT_X; x++)
     {
         for (int y = 0; y < BoardManager.instance.TILE_COUNT_Y; y++)
@@ -63,10 +63,13 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
     }
 
     //Thực hiện nước đi tốt nhất
-    if (startPos == -Vector3Int.one && endPos == -Vector3Int.one) return;
-    chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
-    if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
-        chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+    if (startPos != -Vector3Int.one && endPos != -Vector3Int.one) {
+        chessPieceMoving.CanCapture = false;
+        chessPieceMoving.ChessPieceDespawn = null;
+        chessPieceMoving.SelectedPiece = chessPieceMoving.GetChessPiece(startPos.x, startPos.z);
+        if(chessPieceMoving.SelectedPiece.team == TeamType.Black){
+            chessPieceMoving.MovePiece(chessPieceMoving.SelectedPiece, startPos, endPos);
+        }
     }
 }
  // Hàm minimax để tìm nước đi tối ưu
@@ -191,9 +194,8 @@ protected virtual List<ChessPiece[,]> GeneratePossibleMoves(ChessPiece[,] board,
         if(newPos != -Vector3Int.one && copyBoard[newPos.x, newPos.z] == null){
 
             if(chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item2 != -Vector3.one){
-                ChessPiece despawnPiece = chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item1;
                 Vector3Int despawnPiecePos = chessPieceMoving.CanCapturePiece(copyBoard,piece,newPos.x,newPos.z, x, y).Item2;
-                chessPieceMoving.DespawnChessPiece(copyBoard, despawnPiece, despawnPiecePos, true);
+                chessPieceMoving.DespawnChessPiece(copyBoard, despawnPiecePos, true);
                 var newCapturePos = chessPieceMoving.CheckCaptureFromPosition(copyBoard,piece, newPos, true);
                 copyBoard[newCapturePos.x, newCapturePos.z] = copyBoard[x,y];
                 copyBoard[x,y] = null;

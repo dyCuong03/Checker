@@ -37,6 +37,11 @@ public class ChessPieceMoving : CloneMonoBehaviour
         set { isWhiteTurn = value; }
     }
     protected ChessPiece chessPieceDespawn = null;
+    public ChessPiece ChessPieceDespawn
+    {
+        get { return chessPieceDespawn; }
+        set { chessPieceDespawn = value; }
+    }
     private Camera currentCamera;
     [SerializeField] protected GameObject black_SpawnPos;
     [SerializeField] protected GameObject white_SpawnPos;
@@ -153,7 +158,8 @@ public class ChessPieceMoving : CloneMonoBehaviour
     }
     protected virtual void CheckMovableTile(int xRight, int xLeft, int y)
     {
-        // if (this.CanCapturePiece(xRight, y) || this.CanCapturePiece(xLeft, y))
+        // if (this.CanCapturePiece(BoardManager.instance.Pieces,xRight, y) 
+        // || this.CanCapturePiece(BoardManager.instance.Pieces,xLeft, y))
         // {
         //     this.canCapture = true;
         // }
@@ -398,13 +404,13 @@ public class ChessPieceMoving : CloneMonoBehaviour
 
         this.SetChessPiece(_selectedPiece, x2, y2);
         this.SetChessPiece(null, x1, y1);
-
-        if(chessPieceDespawn != null){
-            this.DespawnChessPiece(BoardManager.instance.Pieces, chessPieceDespawn, chessPieceDespawn.gameObject.transform.position);
-        }
         
-        this.canCapture = false;
+        if(chessPieceDespawn != null){
+            this.DespawnChessPiece(BoardManager.instance.Pieces, chessPieceDespawn, chessPieceDespawn.transform.position);
+        }
         isWhiteTurn = !isWhiteTurn;
+        this.canCapture = false;
+        chessPieceDespawn = null;
         uIManager.CheckWinCondition();
         turnLogDisplayed = false;
         ResetTiles();
@@ -415,7 +421,6 @@ public class ChessPieceMoving : CloneMonoBehaviour
         while (Vector3.Distance(targetTransform.position, targetPosition) > 0.01f)
         {
             targetTransform.position = Vector3.Lerp(targetTransform.position, targetPosition, 10f * Time.deltaTime);
-
             yield return null;
         }
         targetTransform.position = targetPosition;
@@ -427,39 +432,36 @@ public class ChessPieceMoving : CloneMonoBehaviour
             Vector3 chessPieceCapture = _chessPieceDespawnPos;
             int x = (int)chessPieceCapture.x;
             int y = (int)chessPieceCapture.z;
-            //BoardManager.instance.Pieces[x,y] = null;
             board[x,y] = null;
             SpawnChessPieceCaptured(board,_chessPieceDespawn);
             this.canCapture = false;
-            //Debug.Log(this.selectedPiece.transform.position);
             if (CanCapturePiece(this.selectedPiece)){
                 isWhiteTurn = !isWhiteTurn;
             }
         }
     }
-    public virtual void DespawnChessPiece(ChessPiece[,] board, ChessPiece _chessPieceDespawn, Vector3 _chessPieceDespawnPos, bool check)
+    public virtual void DespawnChessPiece(ChessPiece[,] board, Vector3 _chessPieceDespawnPos, bool check)
     {
         if (canCapture){
             Vector3 chessPieceCapture = _chessPieceDespawnPos;
             int x = (int)chessPieceCapture.x;
             int y = (int)chessPieceCapture.z;
-            //BoardManager.instance.Pieces[x,y] = null;
             board[x,y] = null;
-            SpawnChessPieceCaptured(board,_chessPieceDespawn);
         }
     }
     protected virtual bool CheckMovableTileBool(int xRight, int xLeft, int y)
     {
         if (this.CanCapturePiece(BoardManager.instance.Pieces, xRight, y) 
         || this.CanCapturePiece(BoardManager.instance.Pieces, xLeft, y)){
-            this.canCapture = true;
+            this.AddMovableTile(selectedPiece,xRight, y);
+            this.AddMovableTile(selectedPiece, xLeft, y);
+            //this.canCapture = true;
             return true;
         }
-        this.AddMovableTile(selectedPiece,xRight, y);
-        this.AddMovableTile(selectedPiece, xLeft, y);
+
         return false;
     }
-    public virtual bool CanCapturePiece(ChessPiece currentPiece)
+    protected virtual bool CanCapturePiece(ChessPiece currentPiece)
     {
         if(currentPiece == null) return false;
         Vector3 startPos = currentPiece.gameObject.transform.position;
