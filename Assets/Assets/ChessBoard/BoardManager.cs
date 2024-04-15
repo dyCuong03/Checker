@@ -9,6 +9,7 @@ public class BoardManager : CloneMonoBehaviour
 {
     public static BoardManager instance;
     [SerializeField] protected MaterialManager materialManager;
+    [SerializeField] protected GameObject boardBoder;
     protected Material _material;
     public int TILE_COUNT_X = 8;
     public int TILE_COUNT_Y = 8;
@@ -39,12 +40,16 @@ public class BoardManager : CloneMonoBehaviour
         BoardManager.instance = this;
         this.GenerateAllBroad(TILE_COUNT_X,TILE_COUNT_Y);
     }
+    protected override void Start()
+    {
+        base.Start();
+        boardBoder.SetActive(true);
+    }
 
     protected override void Update()
     {
         base.Update();
         this.RayCast();
-        //this.HoverTranslateTile();
     }
     protected virtual void RayCast()
     {
@@ -58,20 +63,23 @@ public class BoardManager : CloneMonoBehaviour
             Vector3Int hitPos = LookupTileIndex(info.transform.gameObject);
             if(currentHover == -Vector3Int.one){
                 currentHover = hitPos;
-                tiles[hitPos.x, hitPos.z].layer = LayerMask.NameToLayer("Hover");
+                //tiles[hitPos.x, hitPos.z].layer = LayerMask.NameToLayer("Hover");
             }
             if(currentHover != hitPos){
-                tiles[currentHover.x, currentHover.z].layer = LayerMask.NameToLayer("Tile");
+                //tiles[currentHover.x, currentHover.z].layer = LayerMask.NameToLayer("Tile");
                 currentHover = hitPos;
-                tiles[hitPos.x, hitPos.z].layer = LayerMask.NameToLayer("Hover");
+                //tiles[hitPos.x, hitPos.z].layer = LayerMask.NameToLayer("Hover");
             }
             this.MouseOverPos(hitPos);
         } else {
             if(currentHover != -Vector3Int.one){
-                tiles[currentHover.x, currentHover.z].layer = LayerMask.NameToLayer("Tile");
+                //tiles[currentHover.x, currentHover.z].layer = LayerMask.NameToLayer("Tile");
                 currentHover = -Vector3Int.one;
             }
             this.MouseOverPos(new Vector3Int(-1,-1,-1));
+        }
+        if(Physics.Raycast(ray, out info, 100, LayerMask.GetMask("Movable"))){
+            Vector3Int hitPos = LookupTileIndex(info.transform.gameObject);
         }
     }
     protected virtual void MouseOverPos(Vector3Int hitPos){
@@ -79,7 +87,7 @@ public class BoardManager : CloneMonoBehaviour
             mouseOver.y = hitPos.y;
             mouseOver.z = hitPos.z;
     }
-    protected virtual Vector3Int LookupTileIndex(GameObject hitInfo){
+    public virtual Vector3Int LookupTileIndex(GameObject hitInfo){
         for(int i = 0; i < TILE_COUNT_X; i++)
             for(int j = 0; j < TILE_COUNT_Y; j++)
                 if(tiles[i,j] == hitInfo)
