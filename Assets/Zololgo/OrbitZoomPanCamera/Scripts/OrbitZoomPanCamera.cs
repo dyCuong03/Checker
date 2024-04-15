@@ -11,7 +11,6 @@ public class OrbitZoomPanCamera : MonoBehaviour {
 	public float autoVerticalPanSpeed = 0.0f;
 	public float originDistance = 1.0f;
 	public Transform originReference;
-
 	Vector3 lastMovement;
 	Vector2 deltaMovement;
 	Vector3 originPosition;
@@ -35,11 +34,11 @@ public class OrbitZoomPanCamera : MonoBehaviour {
 		if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) {
 			deltaMovement = Vector2.zero;
 		}
-		if (Input.GetMouseButton(0))
-		{
-			transform.RotateAround (originPosition, Vector3.up, deltaMovement.x *orbitSpeed * Time.deltaTime);
-			transform.RotateAround (originPosition, transform.TransformDirection(Vector3.left), deltaMovement.y *orbitSpeed * Time.deltaTime);
-		}
+		// if (Input.GetMouseButton(0))
+		// {
+		// 	transform.RotateAround (originPosition, Vector3.up, deltaMovement.x *orbitSpeed * Time.deltaTime);
+		// 	transform.RotateAround (originPosition, transform.TransformDirection(Vector3.left), deltaMovement.y *orbitSpeed * Time.deltaTime);
+		// }
 		else if (Input.GetMouseButton(1))
 		{
 			transform.Translate (Vector3.back * deltaMovement.y * zoomSpeed * Time.deltaTime);
