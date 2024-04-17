@@ -31,7 +31,6 @@ protected virtual void PerformBestMove(ChessPiece[,] bestMove)
     Vector3Int endPos = -Vector3Int.one;
     if (chessPieceMoving.hasMovedPiece) return;
     Debug.Log(score.ToString());
-    Debug.Log(chessPieceMoving.CanCapture);
     foreach(ChessPiece piece in BoardManager.instance.Pieces){
             if(piece != null){
                 if(piece.team == TeamType.Black){
